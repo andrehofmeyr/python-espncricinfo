@@ -126,9 +126,18 @@ class Player(object):
             self.file_name = f"{self.player_id}_{self.match_format}_{self.data_type}_career_averages.csv"
 
         self.url=f"https://stats.espncricinfo.com/ci/engine/player/{self.player_id}.html?class={self.match_format};template=results;type={self.data_type}"
-        html_doc = requests.get(self.url)
+        print("URL")
+        print(self.url)
+        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'}
+        html_doc = requests.get(self.url, headers=headers)
+        print(html_doc)
         soup = BeautifulSoup(html_doc.text, 'html.parser')
-        tables = soup.find_all("table")[2]
+        print("Soup")
+        print(soup)
+        tables = soup.find_all("table")
+        print("Tables")
+        print(tables)
+        tables = tables[2]
         table_rows = tables.find_all("tr")
         scores =[]
         for tr in table_rows:
@@ -158,7 +167,13 @@ class Player(object):
             self.file_name = f"{self.player_id}_{self.match_format}_{self.data_type}_career_summary.csv"
 
         self.url=f"https://stats.espncricinfo.com/ci/engine/player/{self.player_id}.html?class={self.match_format};template=results;type={self.data_type}"
-        html_doc = requests.get(self.url)
+        print("URL")
+        print(self.url)
+        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'}
+        print("Headers")
+        print(headers)
+        html_doc = requests.get(self.url, headers=headers)
+        print(html_doc)
         soup = BeautifulSoup(html_doc.text, 'html.parser')
         tables = soup.find_all("table")[3]
         table_rows = tables.find_all("tr")
@@ -192,7 +207,13 @@ class Player(object):
             self.file_name = f"{self.player_id}_{self.match_format}_{self.data_type}_{self.view}.csv"
 
         self.url=f"https://stats.espncricinfo.com/ci/engine/player/{self.player_id}.html?class={self.match_format};template=results;type={self.data_type};view={self.view}"
-        html_doc = requests.get(self.url)
+        print("URL")
+        print(self.url)
+        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'}
+        print("Headers")
+        print(headers)
+        html_doc = requests.get(self.url, headers=headers)
+        print(html_doc)
         soup = BeautifulSoup(html_doc.text, 'html.parser')
         tables = soup.find_all("table")[3]
         table_rows = tables.find_all("tr")
