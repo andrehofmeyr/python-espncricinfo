@@ -123,7 +123,7 @@ class Player(object):
         self.file_name = file_name
 
         if self.file_name is None:
-            self.file_name = f"player_data/{self.player_id}_{self.match_format}_{self.data_type}_career_averages.csv"
+            self.file_name = f"player_data/{self.name}_{self.player_id}_{self.match_format}_{self.data_type}_career_averages.csv"
 
         self.url=f"https://stats.espncricinfo.com/ci/engine/player/{self.player_id}.html?class={self.match_format};template=results;type={self.data_type}"
         print("URL")
@@ -164,7 +164,7 @@ class Player(object):
         self.file_name = file_name
 
         if self.file_name is None:
-            self.file_name = f"player_data/{self.player_id}_{self.match_format}_{self.data_type}_career_summary.csv"
+            self.file_name = f"player_data/{self.name}_{self.player_id}_{self.match_format}_{self.data_type}_career_summary.csv"
 
         self.url=f"https://stats.espncricinfo.com/ci/engine/player/{self.player_id}.html?class={self.match_format};template=results;type={self.data_type}"
         print("URL")
@@ -204,7 +204,7 @@ class Player(object):
         self.file_name = file_name
 
         if self.file_name is None:
-            self.file_name = f"player_data/{self.player_id}_{self.match_format}_{self.data_type}_{self.view}.csv"
+            self.file_name = f"player_data/{self.name}_{self.player_id}_{self.match_format}_{self.data_type}_{self.view}.csv"
 
         self.url=f"https://stats.espncricinfo.com/ci/engine/player/{self.player_id}.html?class={self.match_format};template=results;type={self.data_type};view={self.view}"
         print("URL")
