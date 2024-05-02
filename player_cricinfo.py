@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 players = ["360911", "398666", "1408681", "526441", "1175473", "1299924", "505120", "959833",
            "398438", "792725", "1216164", "1079668", "924377", "568136", "1182529", "914171",
            "1246488", "1125687", "1263691", "1159711", "538506", "446763", "1320758", "56143",
@@ -122,3 +124,7 @@ for x in players:
     # p.get_career_averages()
     p.get_career_summary()
     # p.get_data()
+
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(f'Time elapsed: {elapsed_time} seconds')
