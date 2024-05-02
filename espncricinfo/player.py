@@ -130,17 +130,19 @@ class Player(object):
         print(self.url)
         headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'}
         html_doc = requests.get(self.url, headers=headers)
-        print(html_doc)
+        # print(html_doc)
         soup = BeautifulSoup(html_doc.text, 'html.parser')
-        print("Soup")
-        print(soup)
+        # print("Soup")
+        # print(soup)
         tables = soup.find_all("table")
-        print("Tables")
-        print(tables)
+        # print("Tables")
+        # print(tables)
         tables = tables[2]
         table_rows = tables.find_all("tr")
+        # print(table_rows)
         scores =[]
         for tr in table_rows:
+            # print(tr)
             scores.append(tr.text)
         with open(self.file_name, "w") as csv_file:
             writer = csv.writer(csv_file, delimiter=',')
@@ -170,8 +172,8 @@ class Player(object):
         print("URL")
         print(self.url)
         headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'}
-        print("Headers")
-        print(headers)
+        # print("Headers")
+        # print(headers)
         html_doc = requests.get(self.url, headers=headers)
         print(html_doc)
         soup = BeautifulSoup(html_doc.text, 'html.parser')
