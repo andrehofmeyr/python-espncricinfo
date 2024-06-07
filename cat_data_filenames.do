@@ -1,4 +1,8 @@
-**PART 1
+/**********************************************************************/
+/*  SECTION 1: Appending CSVs and saving as Stata DTA
+    Notes:     Make sure your working directory is python-espncricinfo */
+/**********************************************************************/
+
 clear
 
 pwd // Shows the current directory
@@ -29,7 +33,7 @@ forvalues i=1/`obs' {
 
     clear
     import delimited using "player_data/`f'", varnames(11) stringcols(_all)
-    gen source = "`source'"
+    gen player_id = "`source'"
 
     tempfile save`i'
     qui save "`save`i''"
@@ -46,4 +50,7 @@ missings dropobs v1-v15, force
 drop v1 inindia-vnewzealand
 
 save cricinfo_all_data.dta, replace
+
+
+/*------------------------------------ End of SECTION 1 ------------------------------------*/
 
