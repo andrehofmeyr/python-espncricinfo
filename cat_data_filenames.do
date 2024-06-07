@@ -3,7 +3,7 @@ clear
 
 pwd // Shows the current directory
 
-filelist , dir(.) pattern(*.csv) //getting files that i need for 15sec epoch
+filelist , dir("player_data") pattern(*.csv) //getting files that i need for 15sec epoch
 
 gen player_id=substr(filename,1,7) // generating student id from file name taking the first 8 characters
 
@@ -28,7 +28,7 @@ forvalues i=1/`obs' {
     local f = filename
 
     clear
-    import delimited using "`f'", varnames(11) stringcols(_all)
+    import delimited using "player_data/`f'", varnames(11) stringcols(_all)
     gen source = "`source'"
 
     tempfile save`i'
