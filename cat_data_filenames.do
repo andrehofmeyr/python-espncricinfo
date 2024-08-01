@@ -153,10 +153,16 @@ save merged_data.dta, replace
 
 use merged_data.dta
 
-gen groupingfull = grouping + "" + vireland if !missing(grouping) & !missing(vireland)
+rename player_id1 player_id
 
-replace groupingfull = grouping if missing(vireland)
-replace groupingfull = vireland if missing(grouping)
+generate grouping_full
+
+foreach variable of varlist(grouping vireland-vscotland) {
+    replace grouping_full = `variable' if grouping_full == ""
+}
+
+drop grouping vireland-vscotland
+
 
 browse
 
