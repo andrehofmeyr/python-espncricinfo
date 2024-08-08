@@ -123,8 +123,6 @@ rename source player_id
 gen dash_pos = strpos(player_id, "_")
 gen player_id1 = substr(player_id, 1, dash_pos -1)
 
-
-use cricinfo_all_data.dta
 save cricinfo_all_data.dta, replace 
 
 missings dropvars * , force
@@ -150,21 +148,14 @@ tostring player_id, gen(player_id1)
 tostring player_id1, replace
 save "IPL Auction.dta", replace
 
------
 use "cricinfo_all_data.dta", clear
 merge m:m player_id1 using "IPL Auction.dta"
 drop _merge
 save merged_data.dta, replace
 
-use merged_data.dta
+save analysis.dta, replace
+use analysis.dta
 
-
-gen groupingfull = grouping + "" + vireland if !missing(grouping) & !missing(vireland)
-
-replace groupingfull = grouping if missing(vireland)
-replace groupingfull = vireland if missing(grouping)
-
-rename player_id1 player_id
 
 generate grouping_full = grouping
 
@@ -174,7 +165,7 @@ foreach variable of varlist(grouping vireland-vscotland) {
 
 drop grouping vireland-vscotland
 
-drop groupingfull R
+drop R
 
 destring player_id, replace
 
@@ -184,9 +175,6 @@ drop if grouping_full == ""
 
 order player_id, first
 order grouping_full, first
-
-
-drop numeric_playerid
 
 rename Name name
 rename NATIONALITY nationality
@@ -246,7 +234,7 @@ label define soldlbl 0 "no" 1 "yes"
 label values sold soldlbl
 
 
-save merged_data.dta, replace
+save analysis.dta, replace
 
 
 //sold variable still needs work
@@ -311,7 +299,7 @@ drop hs
 
 replace ave_diff=(bat_ave - bowl_ave) if ave_diff==0
 
-br if ave_diff <-100 | ave_diff>100
+*br if ave_diff <-100 | ave_diff>100
 
 *above has some large outliers. Worth sorting out?
 
@@ -344,14 +332,15 @@ replace playing_role_cat = 9 if playing_role_cat==6
 //batting role
 
 * creating dummy
+
+rename BattingRole bat_style
 gen rhb = .
+encode bat_style, gen(bat_style_num)
 replace rhb = 1 if bat_style_num == 2
 replace rhb = 0 if bat_style_num == 1
-encode bat_style, gen(bat_style_num)
 drop bat_style
 lab val rhb bat_style
 
-rename BattingRole bat_style
 tab bat_style, missing
 label var rhb "Batting Style"
 label define bat_style 0 "left handed" 1 "right handed", modify
@@ -386,7 +375,7 @@ drop type
 
 //saleprice
 gen log_saleprice = log(saleprice+1)
-histogram log_saleprice, normal
+*histogram log_saleprice, normal
 
 //auctionyear
 
@@ -414,3 +403,5 @@ reg saleprice ig_followers if sold==1 & ig_followers>0
 
 //date for follower count
 drop DateforFollow~t
+
+save analysis.dta, replace
