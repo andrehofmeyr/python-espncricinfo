@@ -153,9 +153,10 @@ merge m:m player_id1 using "IPL Auction.dta"
 drop _merge
 save merged_data.dta, replace
 
-save analysis.dta, replace
-use analysis.dta
+zipfile merged_data.dta, saving(merged_data.zip, replace) 
 
+unzipfile merged_data.zip, replace
+use merged_data.dta, clear
 
 generate grouping_full = grouping
 
@@ -235,6 +236,11 @@ label values sold soldlbl
 
 
 save analysis.dta, replace
+zipfile analysis.dta, saving(analysis.zip, replace) 
+
+unzipfile analysis.zip, replace
+
+use analysis.dta, clear
 
 
 //sold variable still needs work
