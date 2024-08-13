@@ -1,8 +1,9 @@
 **PART 1
 clear all 
-log using "\\technet.wf.uct.ac.za\profiledata$\BVMSAM001\Documents\Honours\Thesis\python-espncricinfo_final (1).log", append
 
 cap log close
+
+log using "\\technet.wf.uct.ac.za\profiledata$\BVMSAM001\Documents\Honours\Thesis\python-espncricinfo_final (1).log", append
 
 numlabel, add
 pwd // Shows the current directory
@@ -189,7 +190,7 @@ rename Fifers fifers
 
 sort grouping_full
 
-keep if grouping_full == "ICC Champions Trophy" | grouping_full == "ICC World Test Champ" | grouping_full == "Men's T20 World Cup" | grouping_full == "The Ashes"| grouping_full == "World Cup"| grouping_full == "in India"| grouping_full == "is captain"| grouping_full == "season 2020/21"| grouping_full == "season 2020"| grouping_full == "season 2021/22"| grouping_full == "season 2021"| grouping_full == "season 2022/23"| grouping_full == "season 2022"| grouping_full == "season 2023/24"| grouping_full == "season 2023"| grouping_full == "season 2024"| grouping_full == "tournament finals"| grouping_full == "v India" | grouping_full == "year 2019"| grouping_full == "year 2020"| grouping_full == "year 2021"| grouping_full == "year 2022"| grouping_full == "year 2023"| grouping_full == "year 2024"
+keep if grouping_full == "ICC Champions Trophy" | grouping_full == "ICC World Test Champ" | grouping_full == "Men's T20 World Cup" | grouping_full == "The Ashes"| grouping_full == "World Cup"| grouping_full == "in India"| grouping_full == "is captain" | grouping_full == "tournament finals"| grouping_full == "v India" | grouping_full == "year 2019"| grouping_full == "year 2020"| grouping_full == "year 2021"| grouping_full == "year 2022"| grouping_full == "year 2023"| grouping_full == "year 2024"
 
 destring matches, replace force
 destring runs, replace force
@@ -223,7 +224,6 @@ destring saleprice, replace
 replace team = "Delhi Capitals" if team =="Dehli Capitals"
 
 replace team = "Gujarat Titans" if team == "Gujurat Titans"
-
 
 
 label define sold 1 "Yes" 0 "No"
@@ -387,12 +387,27 @@ gen log_saleprice = log(saleprice+1)
 
 *how useful is this?
 
+//nationality
+encode nationality, gen(nat_cat)
+
+drop nationality
+
+//team
+
+encode team, gen(team_cat)
+drop team
+
+
+
+
 //sold
 *done this previously I think
 
 //base_price
 *what to do with the missing values here?
 
+
+drop best_figures
 
 //instagram followers
 rename InstagramFoll~s ig_followers
@@ -403,6 +418,8 @@ replace ig_followers = "0" if ig_followers=="none" | ig_followers == "None"
 destring ig_followers, replace
 drop if missing(ig_followers)
 
+gen log_ig_followers = log(ig_followers + 1)
+
 reg saleprice ig_followers if sold==1 & ig_followers>0
 
 *335 people with no available instagram account information. Should these be removed or treated as zeroes?
@@ -411,3 +428,13 @@ reg saleprice ig_followers if sold==1 & ig_followers>0
 drop DateforFollow~t
 
 save analysis.dta, replace
+
+
+* Modelling
+
+//Hurdle 
+logit sold matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers rhb i.bowl_style_cat i.nat_cat
+
+regress log_saleprice matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers rhb i.bowl_style_cat i.nat_cat i.team if sold==1
+
+
