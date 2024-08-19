@@ -160,11 +160,15 @@ unzipfile merged_data.zip, replace
 use merged_data.dta, clear
 
 generate grouping_full = grouping
+order grouping, first
+order vireland, after(ave_diff)
 
 foreach variable of varlist(grouping vireland-vscotland) {
     replace grouping_full = `variable' if grouping_full == ""
 }
 
+order grouping_full, first
+*below code causes issues if you don't change the variable names
 drop grouping vireland-vscotland
 
 drop R
@@ -234,7 +238,7 @@ numlabel, add
 label define soldlbl 0 "no" 1 "yes"
 label values sold soldlbl
 
-
+drop player_id1
 save analysis.dta, replace
 zipfile analysis.dta, saving(analysis.zip, replace) 
 
@@ -261,7 +265,7 @@ misstable sum
 
 //matches
 
-drop if matches <5
+*drop if matches <5
 * done this to ensure sufficient explanatory power
 * average of 15.45 matches per player per category
 
@@ -277,6 +281,10 @@ drop hs
 
 //bat_ave
 * similar thing to above
+
+drop if name =="Johannes Smit" & bat_ave>50
+tab name if bat_ave>50
+
 
 //hundreds
 *hundreds should be fine as is
@@ -310,7 +318,8 @@ replace ave_diff=(bat_ave - bowl_ave) if ave_diff==0
 *above has some large outliers. Worth sorting out?
 
 //age
-*happy with age
+
+gen age_squared = (age*age)
 
 //dob
 drop DateofBirth
@@ -318,22 +327,25 @@ drop DateofBirth
 //auction date
 drop auctiondate
 
-//playing role
-rename PlayingRole playing_role
-tab playing_role
-replace playing_role="All-Rounder" if playing_role=="Allrounder"
-replace playing_role="Wicket-Keeper" if playing_role=="Wicketkeeper" |  playing_role=="Wicketkeeper Batter"
+//playing role - decided not to include this
+drop PlayingRole
 
-tab playing_role if playing_role == "Occasional Wicketkeeper"
 
-*come back to this, being really weird
 
-encode playing_role, gen(playing_role_cat)
 
-label define role 1 "All-Rounder" 2 "Batter" 3 "Bowler" 4 "Bowling All-Rounder" 5 "Middle Order Batter" 6 "Occasional Wicket-Keeper" 7 "Opening Batter" 8 "Top Order Batter" 9 "Wicket-Keeper" 10 "Batting All-Rounder"
-lab val playing_role_cat role
+*rename PlayingRole playing_role
+*tab playing_role
+*replace playing_role="All-Rounder" if playing_role=="Allrounder"
+*replace playing_role="Wicket-Keeper" if playing_role=="Wicketkeeper" |  playing_role=="Wicketkeeper Batter"
 
-replace playing_role_cat = 9 if playing_role_cat==6
+*tab playing_role if playing_role == "Occasional Wicketkeeper"
+
+*encode playing_role, gen(playing_role_cat)
+
+*label define role 1 "All-Rounder" 2 "Batter" 3 "Bowler" 4 "Bowling All-Rounder" 5 "Middle Order Batter" 6 "Occasional Wicket-Keeper" 7 "Opening Batter" 8 "Top Order Batter" 9 "Wicket-Keeper" 10 "Batting All-Rounder"
+*lab val playing_role_cat role
+
+*replace playing_role_cat = 9 if playing_role_cat==6
 
 //batting role
 
@@ -351,8 +363,10 @@ tab bat_style, missing
 label var rhb "Batting Style"
 label define bat_style 0 "left handed" 1 "right handed", modify
 
+drop bat_style_num
+
 * could try to split up all=rounder's a bit more into bowling and batting all-rounders, but would be difficult to split up the 50 'batter's
-tab type playing_role_cat //can help to visualise this
+*tab type playing_role_cat //can help to visualise this
 
 //bowling role
 
@@ -422,19 +436,176 @@ gen log_ig_followers = log(ig_followers + 1)
 
 reg saleprice ig_followers if sold==1 & ig_followers>0
 
-*335 people with no available instagram account information. Should these be removed or treated as zeroes?
+replace ig_followers = 200000 if name == "Adam Milne"
+replace ig_followers =200000 if name =="Afif Hossain"
+replace ig_followers =100000 if name =="Ali Khan"
+replace ig_followers = 40000 if name =="Ashton Agar"
+replace ig_followers = 5000 if name =="Blair Tickner"
+replace ig_followers =20000 if name =="Colin De Grandhomme"
+replace ig_followers =50000 if name =="Darren Bravo"
+replace ig_followers =350000 if name =="Dasun Shanaka"
+replace ig_followers =10000 if name =="Fidel Edwards"
+replace ig_followers =55000 if name =="Hamid Hassan"
+replace ig_followers =1000 if name =="Hamish Bennett"
+replace ig_followers =270000 if name =="James Faulkner"
+replace ig_followers =7500 if name =="James Vince"
+replace ig_followers =25000 if name =="Josh Inglis"
+replace ig_followers =15000 if name =="Keemo Paul"
+replace ig_followers =14000 if name =="Lewis Gregory"
+replace ig_followers =5000 if name =="Lizaad Williams"
+replace ig_followers =350000 if name =="Mark Wood"
+replace ig_followers =80000 if name =="Matthew Wade"
+replace ig_followers =1500000 if name =="Mayank Agarwal"
+replace ig_followers =1250000 if name =="Moeen Ali"
+replace ig_followers =215000 if name =="Morne Morkel"
+replace ig_followers =1500000 if name =="Mushfiqur Rahim"
+replace ig_followers =35000 if name =="Nathan Coulter-Nile"
+replace ig_followers =50000 if name =="Neil Wagner"
+replace ig_followers =100000 if name =="Qais Ahmad"
+replace ig_followers =600000 if name =="Quinton De Kock"
+replace ig_followers =15000 if name =="Roston Chase"
+replace ig_followers =15000 if name =="Scott Kuggelijn"
+replace ig_followers =17500 if name =="Seekkuge Prassanna"
+replace ig_followers =3000 if name =="Shamarh Brooks"
+replace ig_followers =50000 if name =="Thisara Perera"
+replace ig_followers =40000 if name =="Tim Seifert"
+replace ig_followers =2000 if name =="Todd Astle"
+replace ig_followers =80000 if name =="Tom Latham"
+replace ig_followers =3000 if name =="Zubayr Hamza"
+
+*49 people with no instagram account. Should these be removed or treated as zeroes? Intution suggests treat as zeroes.
 
 //date for follower count
 drop DateforFollow~t
+
+*Some outlier issues to highlight
+
+br if bowl_ave >50 & type_cat ==3
+br if bat_ave <10 & type_cat ==2
 
 save analysis.dta, replace
 
 
 * Modelling
 
-//Hurdle 
-logit sold matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers rhb i.bowl_style_cat i.nat_cat
+*should I put age and age_squared in?
 
-regress log_saleprice matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers rhb i.bowl_style_cat i.nat_cat i.team if sold==1
+//Hurdle 
+logit sold age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers rhb i.bowl_style_cat i.nat_cat ave_interaction
+
+regress log_saleprice age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers rhb i.bowl_style_cat i.nat_cat i.team ave_interaction if sold==1
+
+
+//suggested additions
+
+vif
+
+summarize log_saleprice if sold==1, detail
+
+ssc install egenmore
+
+ssc install regsave
+
+ssc install outreg2
+
+ssc install missings
+
+egen career_bat_ave = mean(bat_ave), by(player_id)
+
+egen career_bowl_ave = mean(bowl_ave), by(player_id)
+
+generate ave_interaction = bat_ave * bowl_ave
+
+
+
+*Potentially skewed data to consider cleaning?
+
+//Very long time spans. 
+//Players with high numbers of matches played or low numbers of matches played
+//should I log matches played and runs scored? Currently not normally distributed...
+//use IQR to remove skewed performance metrics. eg:
+
+//quietly summarize Runs
+//gen IQR = r(p75) - r(p25)
+//gen lower_bound = r(p25) - 1.5 * IQR
+//gen upper_bound = r(p75) + 1.5 * IQR
+//drop if Runs < lower_bound | Runs > upper_bound	
+
+*Xtset? Will this be useful?
+
+//panel identifier will be player_id. What will the time identifier be? Problem is that the data spans over multiple years (except in the case of 'year 2019' etc)
+
+//xtset player_id timingvariable
+//xtdescribe
+//xtreg SalePrice CareerSpan Matches Runs HighScore BattingAverage Hundreds Wickets BestFigures BowlingAverage Fifers Caught Stumpings AvgDifference BasePrice, fe
+//xtreg SalePrice CareerSpan Matches Runs HighScore BattingAverage Hundreds Wickets BestFigures BowlingAverage Fifers Caught Stumpings AvgDifference BasePrice, re
+//hausman fe re
+//including lagged variables: xtreg SalePrice L.SalePrice CareerSpan Matches Runs HighScore BattingAverage Hundreds Wickets BestFigures BowlingAverage Fifers Caught Stumpings AvgDifference BasePrice, fe
+
+//graphs and summary statistics
+
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+graph pie if sold==1, over(type_cat)
+
+graph pie if sold==1, over(team_cat)
+
+graph pie if sold==1, over(nat_cat)
+
+*Cross-tabulation table
+tabulate type_cat team_cat, chi2 
+
+* Correlation matrix
+correlate age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff type_cat log_ig_followers rhb bowl_style_cat nat_cat team ave_interaction saleprice base_price sold
+outreg2 using correlation_matrix.doc, replace ctitle("Correlation Matrix")
+
+* Histograms
+histogram log_saleprice if sold==1, normal saving(saleprice_hist, replace)
+histogram bat_ave, normal saving(battingaverage_hist, replace)
+histogram bowl_ave if wkts>0, normal saving(bowling_average_hist, replace)
+histogram matches, normal saving(matches_hist, replace)
+
+* Box plots
+graph box saleprice, saving(saleprice_box, replace)
+graph box bat_ave, saving(battingaverage_box, replace)
+
+* Bar charts
+graph bar (count), over(type_cat) saving(player_type_bar, replace)
+graph bar (count), over(team_cat) saving(team_bar, replace)
+graph bar (count), over(rhb) saving(battinghand_bar, replace)
+graph bar (count), over(nat_cat) saving(nationality_bar, replace)
+graph bar (count), over(bowl_style_cat) saving(bowl_style_bar, replace)
+graph bar (count), over(auction_year) saving(auction_year_bar, replace)
+graph bar (count), over(sold) saving(sold_bar, replace)
+graph bar mean_price_year, over(auction_year) saving(mean_price_year, replace)
+
+
+//graphs to jpeg for mac
+graph bar (count), over(type_cat) saving(player_type_bar.pdf, as(pdf) replace)
+graph bar (count), over(team_cat) saving(team_bar, replace)
+graph bar (count), over(rhb) saving(battinghand_bar, replace)
+graph bar (count), over(nat_cat) saving(nationality_bar, replace)
+graph bar (count), over(bowl_style_cat) saving(bowl_style_bar, replace)
+graph bar (count), over(auction_year) saving(auction_year_bar, replace)
+graph bar (count), over(sold) saving(sold_bar, replace)
+graph bar mean_price_year, over(auction_year) saving(mean_price_year, replace)
+
+
+* Scatter plots
+scatter log_saleprice runs if sold==1 & runs>0, saving(saleprice_runs_scatter, replace)
+scatter log_saleprice bat_ave if sold==1 & runs>0 & type_cat!=3, saving(saleprice_battingaverage_scatter, replace)
+
+
+* Line plots - needs work
+
+egen mean_price_year = mean(saleprice), by(auction_year)
+
+twoway (line mean_price_year auction_year if sold==1), saving(saleprice_trend, replace)
+
+
+
+
 
 
