@@ -483,19 +483,6 @@ drop DateforFollow~t
 br if bowl_ave >50 & type_cat ==3
 br if bat_ave <10 & type_cat ==2
 
-save analysis.dta, replace
-
-
-* Modelling
-
-*should I put age and age_squared in?
-
-//Hurdle 
-logit sold age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers rhb i.bowl_style_cat i.nat_cat ave_interaction
-
-regress log_saleprice age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers rhb i.bowl_style_cat i.nat_cat i.team ave_interaction if sold==1
-
-
 //suggested additions
 
 vif
@@ -516,6 +503,24 @@ egen career_bowl_ave = mean(bowl_ave), by(player_id)
 
 generate ave_interaction = bat_ave * bowl_ave
 
+egen mean_price_year = mean(saleprice), by(auction_year)
+
+save analysis.dta, replace
+
+
+* Modelling
+
+*should I put age and age_squared in?
+
+//Hurdle 
+logit sold age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat ave_interaction 
+
+regress log_saleprice age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat i.team ave_interaction if sold==1
+
+churdle linear log_saleprice age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat i.team ave_interaction, select(age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat ave_interaction) ll(0)
+
+margins, dydx(age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat i.team ave_interaction) 
+regsave using "margins.xls", replace
 
 
 *Potentially skewed data to consider cleaning?
@@ -558,10 +563,15 @@ graph pie if sold==1, over(nat_cat)
 tabulate type_cat team_cat, chi2 
 
 * Correlation matrix
-correlate age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff type_cat log_ig_followers rhb bowl_style_cat nat_cat team ave_interaction saleprice base_price sold
-outreg2 using correlation_matrix.doc, replace ctitle("Correlation Matrix")
+correlate age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff type_cat log_ig_followers rhb bowl_style_cat nat_cat team ave_interaction saleprice sold
+outreg2 using correlation_matrix.xls, replace ctitle("Correlation Matrix")
 
 * Histograms
+//reason for using hurdle model:
+histogram saleprice, normal saving(saleprice_all_hist, replace)
+
+
+
 histogram log_saleprice if sold==1, normal saving(saleprice_hist, replace)
 histogram bat_ave, normal saving(battingaverage_hist, replace)
 histogram bowl_ave if wkts>0, normal saving(bowling_average_hist, replace)
@@ -573,25 +583,13 @@ graph box bat_ave, saving(battingaverage_box, replace)
 
 * Bar charts
 graph bar (count), over(type_cat) saving(player_type_bar, replace)
-graph bar (count), over(team_cat) saving(team_bar, replace)
+graph bar (count) if team_cat!=7, over(team_cat)  saving(team_bar, replace)
 graph bar (count), over(rhb) saving(battinghand_bar, replace)
 graph bar (count), over(nat_cat) saving(nationality_bar, replace)
 graph bar (count), over(bowl_style_cat) saving(bowl_style_bar, replace)
 graph bar (count), over(auction_year) saving(auction_year_bar, replace)
 graph bar (count), over(sold) saving(sold_bar, replace)
 graph bar mean_price_year, over(auction_year) saving(mean_price_year, replace)
-
-
-//graphs to jpeg for mac
-graph bar (count), over(type_cat) saving(player_type_bar.pdf, as(pdf) replace)
-graph bar (count), over(team_cat) saving(team_bar, replace)
-graph bar (count), over(rhb) saving(battinghand_bar, replace)
-graph bar (count), over(nat_cat) saving(nationality_bar, replace)
-graph bar (count), over(bowl_style_cat) saving(bowl_style_bar, replace)
-graph bar (count), over(auction_year) saving(auction_year_bar, replace)
-graph bar (count), over(sold) saving(sold_bar, replace)
-graph bar mean_price_year, over(auction_year) saving(mean_price_year, replace)
-
 
 * Scatter plots
 scatter log_saleprice runs if sold==1 & runs>0, saving(saleprice_runs_scatter, replace)
@@ -600,7 +598,7 @@ scatter log_saleprice bat_ave if sold==1 & runs>0 & type_cat!=3, saving(salepric
 
 * Line plots - needs work
 
-egen mean_price_year = mean(saleprice), by(auction_year)
+
 
 twoway (line mean_price_year auction_year if sold==1), saving(saleprice_trend, replace)
 
