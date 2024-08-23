@@ -655,19 +655,22 @@ outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
 
 
 //OLS Models
-
+use analysis.dta, clear
 
 *should I put age and age_squared in?
 
 //Hurdle 
-logit sold age_squared matches runs bat_ave hundreds wkts bowl_ave  ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat ave_interaction 
+logit sold age#age matches runs bat_ave hundreds wkts bowl_ave  ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat ave_interaction 
 
-regress log_saleprice age_squared matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat i.team ave_interaction if sold==1
+regress log_saleprice age#age matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat i.team ave_interaction if sold==1
 
-churdle linear log_saleprice age_squared matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat i.team ave_interaction, select(age_squared matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat ave_interaction) ll(0)
+churdle linear log_saleprice c.age##c.age matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat i.team ave_interaction, select(age_squared matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat ave_interaction) ll(0)
 
-margins, dydx(age_squared matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat i.team ave_interaction) 
+margins, dydx(*) 
 regsave using "margins.xls", replace
+
+//treat variables as continuous. Fix factor variable syntax.
+
 
 
 *Potentially skewed data to consider cleaning?
