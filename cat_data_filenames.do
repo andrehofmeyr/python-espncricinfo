@@ -5,6 +5,8 @@ cap log close
 
 unzipfile player_data.zip, replace
 
+cd player_data
+
 log using "python-espncricinfo_final (1).log", append
 
 numlabel, add
