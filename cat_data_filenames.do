@@ -3,7 +3,7 @@ clear all
 
 cap log close
 
-log using "\\technet.wf.uct.ac.za\profiledata$\BVMSAM001\Documents\Honours\Thesis\python-espncricinfo_final (1).log", append
+log using "python-espncricinfo_final (1).log", append
 
 numlabel, add
 pwd // Shows the current directory
@@ -38,7 +38,7 @@ forvalues i=1/`obs' {
     local f = filename
 
     clear
-    import delimited using "`f'", varnames(11) stringcols(_all)
+    import delimited using "`f'", varnames(1) stringcols(_all)
     gen source = "`source'"
 
     tempfile save`i'
@@ -50,79 +50,66 @@ forvalues i=1/`obs' {
     append using "`save`i''"
 }
 
+gen vfirst = v1
+gen vend = v1
 
-missings dropobs v1-v15, force
 
+order vfirst, first
+order vend, before(source)
+
+drop vfirst-vend
+drop v1
 
 
 save cricinfo_all_data.dta, replace
 
-rename vnetherlands grouping
+replace grouping = "Overall" if v16 == "Profile"
 
-label var grouping "Grouping"
+drop v2 v16
 
-
-rename v3 span
+//Labelling
 
 label var span "Span"
 
 
-rename v4 matches
-
+rename mat matches
 label var matches "Matches Played"
-
-
-rename v5 runs
 
 label var runs "Runs Scored"
 
-
-
-rename v6 hs
-
 label var hs "Highest Score"
 
-rename v7 bat_ave
-
+rename batav bat_ave
 label var bat_ave "Batting Average"
 
 rename v8 hundreds
 
 label var hundreds "Hundreds Scored"
 
-rename v9 wkts
-
 label var wkts "Wickets Taken"
 
-rename v10 best_figures
+label var bbi "Best Bowling Figures"
 
-label var best_figures "Best Bowling Figures"
-
-rename v11 bowl_ave
+rename bowlav bowl_ave
 
 label var bowl_ave "Bowling Average"
 
-rename v12 Fifers
-
-label var Fifers "Number of Five Wicket Hauls"
-
-rename v13 ct
-
 label var ct "Catches"
-
-rename v14 st
 
 label var st "Stumpings (Wicketkeeper)"
 
-rename v15 ave_diff
+rename avediff ave_diff
 
 label var ave_diff "Difference in Averages (Batting minus Bowling)"
 
 rename source player_id
 
+order grouping, first
 
 gen dash_pos = strpos(player_id, "_")
 gen player_id1 = substr(player_id, 1, dash_pos -1)
+
+replace player_id1 = player_id if missing(player_id1)
 
 save cricinfo_all_data.dta, replace 
 
@@ -159,28 +146,14 @@ zipfile merged_data.dta, saving(merged_data.zip, replace)
 unzipfile merged_data.zip, replace
 use merged_data.dta, clear
 
-generate grouping_full = grouping
-order grouping, first
-order vireland, after(ave_diff)
-
-foreach variable of varlist(grouping vireland-vscotland) {
-    replace grouping_full = `variable' if grouping_full == ""
-}
-
-order grouping_full, first
-*below code causes issues if you don't change the variable names
-drop grouping vireland-vscotland
+drop if missing(grouping)
 
 drop R
 
 destring player_id, replace
 
-drop if missing(player_id)
-drop if grouping_full == ""
-
-
 order player_id, first
-order grouping_full, first
+order grouping, first
 
 rename Name name
 rename NATIONALITY nationality
@@ -190,34 +163,29 @@ rename TEAM team
 rename AUCTIONYEAR auction_year
 rename SOLD sold
 rename MinimumBidIfUnsold base_price
-rename Fifers fifers
 
-sort grouping_full
+order name, first
 
-keep if grouping_full == "ICC Champions Trophy" | grouping_full == "ICC World Test Champ" | grouping_full == "Men's T20 World Cup" | grouping_full == "The Ashes"| grouping_full == "World Cup"| grouping_full == "in India"| grouping_full == "is captain" | grouping_full == "tournament finals"| grouping_full == "v India" | grouping_full == "year 2019"| grouping_full == "year 2020"| grouping_full == "year 2021"| grouping_full == "year 2022"| grouping_full == "year 2023"| grouping_full == "year 2024"
+keep if  grouping == "One-Day Internationals" |grouping == "Overall" |grouping == "Test matches" | grouping == "Twenty20 Internationals"   | grouping == "Men's T20 World Cup" | grouping == "World Cup"| grouping == "in India"| grouping == "is captain" | grouping == "tournament finals"| grouping == "v India" | grouping == "year 2019"| grouping == "year 2020"| grouping == "year 2021"| grouping == "year 2022"| grouping == "year 2023"| grouping == "year 2024" | grouping == "is not captain"| grouping == "year 1998"| grouping == "year 1999"| grouping == "year 2000"| grouping == "year 2001"| grouping == "year 2002"| grouping == "year 2003"| grouping == "year 2004"| grouping == "year 2005"| grouping == "year 2006"| grouping == "year 2007"| grouping == "year 2008"| grouping == "year 2009"| grouping == "year 2010"| grouping == "year 2011"| grouping == "year 2012"| grouping == "year 2013"| grouping == "year 2014"| grouping == "year 2015"| grouping == "year 2016"| grouping == "year 2017"| grouping == "year 2018"
 
 destring matches, replace force
+
 destring runs, replace force
-destring hs, replace force
 destring bat_ave, replace force
 destring hundreds, replace force
 destring wkts, replace force
-destring best_figures, replace force
 destring bowl_ave, replace force
-destring fifers, replace force
 destring ct, replace force
 destring st, replace force
 destring ave_diff, replace force
 
 replace matches = 0 if missing(matches)
 replace runs = 0 if missing(runs)
-replace hs = 0 if missing(hs)
-replace bat_ave = 0 if missing(bat_ave)
+replace hs = "DNB" if hs == "-"
+replace bat_ave = (runs/matches) if missing(bat_ave)
 replace hundreds = 0 if missing(hundreds)
 replace wkts = 0 if missing(wkts)
-replace best_figures = 0 if missing(best_figures)
 replace bowl_ave = 0 if missing(bowl_ave)
-replace fifers = 0 if missing(fifers)
 replace ct = 0 if missing(ct)
 replace st = 0 if missing(st)
 replace ave_diff = 0 if missing(ave_diff)
@@ -251,7 +219,6 @@ use analysis.dta, clear
 
 
 * look at xtset
-* keep if grouping == "xyz" | "xyz"
 
 
 *//////////////////////////////////////////////////////////////////////////////
@@ -277,11 +244,13 @@ misstable sum
 * hs of zero is weird... especially if they then have runs?
 *either need to drop this variable entirely or simply drop those observations... probably better to drop the variable entirely
 
-drop hs
+*currently hs is just there for interest -> not used for analysis.
 
 //bat_ave
 * similar thing to above
 
+
+br if bat_ave>50 & matches <5
 drop if name =="Johannes Smit" & bat_ave>50
 tab name if bat_ave>50
 
@@ -298,9 +267,6 @@ tab name if bat_ave>50
 
 //bowl_ave
 * same as bat_ave
-
-//fifers
-* similar to hundreds
 
 //ct
 *no real cleaning necessary
@@ -420,8 +386,12 @@ drop team
 //base_price
 *what to do with the missing values here?
 
+egen pid_one=tag(player_id)
+sort pid_one
 
-drop best_figures
+tab name if pid_one==1
+
+
 
 //instagram followers
 rename InstagramFoll~s ig_followers
@@ -510,16 +480,508 @@ save analysis.dta, replace
 
 * Modelling
 
+
+//vars of interest -> want mean, sum, max, min
+* saleprice
+* matches
+*runs
+*bat_ave
+*hundreds
+* wkts
+*bowl_ave
+
+
+//bowlers: age matches wkts bowl_ave ave_diff bowl_style_cat ig_followers saleprice sold
+
+//batters: age matches runs bat_ave hundreds ave_diff ig_followers rhb saleprice sold
+
+//keepers: age matches runs bat_ave hundreds ave_diff ct st ig_followers rhb saleprice sold
+
+//all-rounders: age matches runs bat_ave hundreds wkts bowl_ave ave_diff bowl_style_cat ig_followers saleprice sold
+
+//Desc Stats
+
+
+* Overall
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+//Formats
+	***** Tests
+
+//Overall
+	use analysis.dta, clear
+keep if grouping == "Test matches" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+	
+//Batters
+	use analysis.dta, clear
+keep if grouping == "Test matches" & type_cat==2
+keep age matches runs bat_ave hundreds ave_diff ig_followers rhb saleprice sold
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+//Bowlers
+
+use analysis.dta, clear
+keep if grouping == "Test matches" & type_cat==3
+keep age matches wkts bowl_ave ave_diff bowl_style_cat ig_followers saleprice sold
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+
+//All-Rounders
+
+use analysis.dta, clear
+keep if grouping == "Test matches" & type_cat==1
+keep age matches runs bat_ave hundreds wkts bowl_ave ave_diff bowl_style_cat ig_followers saleprice sold
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+//Keepers
+	use analysis.dta, clear
+keep if grouping == "Test matches" & type_cat==4
+keep age matches runs bat_ave hundreds ave_diff ct st ig_followers rhb saleprice sold
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+	
+	
+	* ODI's
+
+//Overall
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+	
+	
+//Batters
+
+
+
+
+
+//Bowlers
+
+
+
+
+//All-Rounders
+
+
+	***** T20's
+
+//Overall
+	use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+	
+//Batters
+	use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" & type_cat==2
+keep age matches runs bat_ave hundreds ave_diff ig_followers rhb saleprice sold
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+//Bowlers
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" & type_cat==3
+keep age matches wkts bowl_ave ave_diff bowl_style_cat ig_followers saleprice sold
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+
+//All-Rounders
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" & type_cat==1
+keep age matches runs bat_ave hundreds wkts bowl_ave ave_diff bowl_style_cat ig_followers saleprice sold
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+//Keepers
+	use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" & type_cat==4
+keep age matches runs bat_ave hundreds ave_diff ct st ig_followers rhb saleprice sold
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+//Tournaments
+
+	* Men's T20 World Cup
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+	* World Cup
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+	* Tournament Finals
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+*in India
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+//Leadership
+	* Captain
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+	* Not Captain
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+	
+//Player type
+	* Bowlers
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+	* Batters
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+	* Wicket-Keepers
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+	* All-Rounders
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+//Teams
+
+
+
+//Sold vs Unsold
+	* Sold Players
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+
+	* Unsold Players
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+* By bowler type
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+* By nationality
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+
+* By Year
+
+	//1998
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+	//1999
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+	//2000
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+	//2001
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+	//2002
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+	//2003
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+	//2004
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+	//2005
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+	//2006
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+	//2007
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+	//2008
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+	//2009
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+	//2010
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+	//2011
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+
+	//2012
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+	//2013
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+	//2014
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+	//2015
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+
+	//2016
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+	//2017
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+	//2018
+
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+	//2019
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+	//2020
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+	//2021
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+	//2022
+
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+
+	//2023
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+
+	//2024
+use analysis.dta, clear
+keep if grouping == "Twenty20 Internationals" 
+keep matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff age saleprice sold age rhb 
+outreg2 using "summary_stats.xls", replace ctitle("Summary Statistics") ///
+    sum(log) dec(2) stat(n mean sd min max)
+
+
+
+//OLS Models
+
+
 *should I put age and age_squared in?
 
 //Hurdle 
-logit sold age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat ave_interaction 
+logit sold age_squared matches runs bat_ave hundreds wkts bowl_ave  ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat ave_interaction 
 
-regress log_saleprice age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat i.team ave_interaction if sold==1
+regress log_saleprice age_squared matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat i.team ave_interaction if sold==1
 
-churdle linear log_saleprice age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat i.team ave_interaction, select(age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat ave_interaction) ll(0)
+churdle linear log_saleprice age_squared matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat i.team ave_interaction, select(age_squared matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat ave_interaction) ll(0)
 
-margins, dydx(age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat i.team ave_interaction) 
+margins, dydx(age_squared matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff i.type_cat log_ig_followers i.rhb i.bowl_style_cat i.nat_cat i.team ave_interaction) 
 regsave using "margins.xls", replace
 
 
@@ -563,7 +1025,7 @@ graph pie if sold==1, over(nat_cat)
 tabulate type_cat team_cat, chi2 
 
 * Correlation matrix
-correlate age_squared matches runs bat_ave hundreds wkts bowl_ave fifers ct st ave_diff type_cat log_ig_followers rhb bowl_style_cat nat_cat team ave_interaction saleprice sold
+correlate age_squared matches runs bat_ave hundreds wkts bowl_ave ct st ave_diff type_cat log_ig_followers rhb bowl_style_cat nat_cat team ave_interaction saleprice sold
 outreg2 using correlation_matrix.xls, replace ctitle("Correlation Matrix")
 
 * Histograms
@@ -602,8 +1064,30 @@ scatter log_saleprice bat_ave if sold==1 & runs>0 & type_cat!=3, saving(salepric
 
 twoway (line mean_price_year auction_year if sold==1), saving(saleprice_trend, replace)
 
+//Graph recommendations book
+
+twoway kdensity saleprice
+
+twoway lfit saleprice bat_ave if sold==1
+
+twoway (scatter saleprice bat_ave) (lfit saleprice bat_ave) if sold==1
+
+graph hbar saleprice if sold==1, over(team_cat, label(nolabels)) blabel(group, position(base))
+
+graph hbox saleprice if sold==1, over(team_cat)
+
+graph hbox saleprice if sold==1, over(team_cat) asyvar 
+
+//graph hbar saleprice, over(nat_cat) asyvar legend (rows(3))
 
 
+//options:
+* title("This is a title for the graph")
+*title ("Title", box size(small))
+* xlabel(0(5)40) - x axis labelled from 0 to 40 in increments of 5
+*legend(cols(1)) which symbols 
 
+//Regression fits
 
+twoway (lfitci ownhome pcturban80, stdf) (scatter ownhome pcturban80)
 
