@@ -408,4 +408,51 @@ unzipfile analysis.zip, replace
 
 use analysis.dta, clear
 
+**Post-Merge cleaning
+//type_cat
+
+replace type_cat2021 = type_cat2022 if missing(type_cat2021) & !missing(type_cat2022)
+replace type_cat2021 = type_cat2023 if missing(type_cat2021) & !missing(type_cat2023)
+replace type_cat2021 = type_cat2024 if missing(type_cat2021) & !missing(type_cat2024)
+
+replace type_cat2022 = type_cat2021 if missing(type_cat2022) & !missing(type_cat2021)
+replace type_cat2022 = type_cat2023 if missing(type_cat2022) & !missing(type_cat2023)
+replace type_cat2022 = type_cat2024 if missing(type_cat2022) & !missing(type_cat2024)
+
+replace type_cat2023 = type_cat2021 if missing(type_cat2023) & !missing(type_cat2021)
+replace type_cat2023 = type_cat2022 if missing(type_cat2023) & !missing(type_cat2022)
+replace type_cat2023 = type_cat2024 if missing(type_cat2023) & !missing(type_cat2024)
+
+replace type_cat2024 = type_cat2021 if missing(type_cat2024) & !missing(type_cat2021)
+replace type_cat2024 = type_cat2023 if missing(type_cat2024) & !missing(type_cat2023)
+replace type_cat2024 = type_cat2022 if missing(type_cat2024) & !missing(type_cat2022)
+
+
+generate all_same_value = (type_cat2021 == type_cat2022) & (type_cat2022 == type_cat2023) & (type_cat2023 == type_cat2024)
+tab all_same_value
+
+drop type_cat2021 type_cat2022 type_cat2023 all_same_value
+rename type_cat2024 type_cat
+
+//nat_cat
+
+replace nat_cat2021 = nat_cat2022 if missing(nat_cat2021) & !missing(nat_cat2022)
+replace nat_cat2021 = nat_cat2023 if missing(nat_cat2021) & !missing(nat_cat2023)
+replace nat_cat2021 = nat_cat2024 if missing(nat_cat2021) & !missing(nat_cat2024)
+
+replace nat_cat2022 = nat_cat2021 if missing(nat_cat2022) & !missing(nat_cat2021)
+replace nat_cat2022 = nat_cat2023 if missing(nat_cat2022) & !missing(nat_cat2023)
+replace nat_cat2022 = nat_cat2024 if missing(nat_cat2022) & !missing(nat_cat2024)
+
+replace nat_cat2023 = nat_cat2021 if missing(nat_cat2023) & !missing(nat_cat2021)
+replace nat_cat2023 = nat_cat2022 if missing(nat_cat2023) & !missing(nat_cat2022)
+replace nat_cat2023 = nat_cat2024 if missing(nat_cat2023) & !missing(nat_cat2024)
+
+replace nat_cat2024 = nat_cat2021 if missing(nat_cat2024) & !missing(nat_cat2021)
+replace nat_cat2024 = nat_cat2023 if missing(nat_cat2024) & !missing(nat_cat2023)
+replace nat_cat2024 = nat_cat2022 if missing(nat_cat2024) & !missing(nat_cat2022)
+
+drop nat_cat2021 nat_cat2022 nat_cat2023 PlayingRole
+rename nat_cat2024 nat_cat
+
 
