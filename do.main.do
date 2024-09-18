@@ -24,6 +24,7 @@ ssc install regsave
 
 ssc install outreg2
 
+set scheme s2color, permanently
 
 filelist , dir(.) pattern(*.csv) //getting files that i need for 15sec epoch
 
@@ -155,7 +156,7 @@ replace ave_diff = 0 if missing(ave_diff)
 
 replace ave_diff=(bat_ave - bowl_ave) if ave_diff==0
 
-keep if  grouping == "One-Day Internationals" |grouping == "Overall" |grouping == "Test matches" | grouping == "Twenty20 Internationals"   | grouping == "Men's T20 World Cup" | grouping == "World Cup"| grouping == "in India"| grouping == "is captain" | grouping == "tournament finals"| grouping == "v India" | grouping == "year 2019"| grouping == "year 2020"| grouping == "year 2021"| grouping == "year 2022"| grouping == "year 2023"| grouping == "year 2024" | grouping == "is not captain"| grouping == "year 1998"| grouping == "year 1999"| grouping == "year 2000"| grouping == "year 2001"| grouping == "year 2002"| grouping == "year 2003"| grouping == "year 2004"| grouping == "year 2005"| grouping == "year 2006"| grouping == "year 2007"| grouping == "year 2008"| grouping == "year 2009"| grouping == "year 2010"| grouping == "year 2011"| grouping == "year 2012"| grouping == "year 2013"| grouping == "year 2014"| grouping == "year 2015"| grouping == "year 2016"| grouping == "year 2017"| grouping == "year 2018"
+keep if  grouping == "One-Day Internationals" |grouping == "Overall" |grouping == "Test matches" | grouping == "Twenty20 Internationals"   | grouping == "Men's T20 World Cup" | grouping == "World Cup"| grouping == "tournament finals" | grouping == "year 2019"| grouping == "year 2020"| grouping == "year 2021"| grouping == "year 2022"| grouping == "year 2023"| grouping == "year 2024" 
 
 destring player_id1, replace
 
@@ -400,7 +401,6 @@ order name, first
 
 
 
-drop player_id1
 save analysis.dta, replace
 zipfile analysis.dta, saving(analysis.zip, replace) 
 
@@ -455,4 +455,15 @@ replace nat_cat2024 = nat_cat2022 if missing(nat_cat2024) & !missing(nat_cat2022
 drop nat_cat2021 nat_cat2022 nat_cat2023 PlayingRole
 rename nat_cat2024 nat_cat
 
+drop if missing(name)
+
+save analysis.dta, replace
+
+encode grouping, gen (grouping_cat)
+drop grouping_num
+
+
+reshape wide grouping span matches runs hs hundreds bat_ave wkts bbi bowl_ave ct st ave_diff, i(player_id1) j(grouping_cat)
+
+save analysis.dta, replace
 
