@@ -77,6 +77,7 @@ drop v1
 
 save cricinfo_all_data.dta, replace
 
+
 //CLEANING CSV DATA
 
 replace grouping = "Overall" if v16 == "Profile"
@@ -170,6 +171,10 @@ drop dup_tag
 
 save cricinfo_all_data, replace
 
+*Reshaping cricinfo_all_data
+ reshape wide grouping span matches runs bat_ave hs wkts hundreds bbi bowl_ave ct st ave_diff, i(player_id1) j(grouping_num)
+
+save cricinfo_all_data, replace
 
 *IPL AUCTION DATA CLEANING
 
@@ -352,7 +357,7 @@ replace nat_cat = 1 if name == "Mujeeb Rahman"
 drop unique_name unique_player_id problem
 rename player_id player_id1
 
- reshape wide age saleprice team sold base_price ig_followers log_saleprice log_ig_followers nat_cat type_cat, i(player_id1) j(auction_year) 
+ //reshape wide age saleprice team sold base_price ig_followers log_saleprice log_ig_followers nat_cat type_cat, i(player_id1) j(auction_year) 
  //(j = 2021 2022 2023 2024)
  
  save "IPL Auction.dta", replace
@@ -378,7 +383,7 @@ rename player_id player_id1
 //MERGING
 
 use "cricinfo_all_data.dta", clear
-merge m:1 player_id1 using "IPL Auction.dta"
+merge 1:m player_id1 using "IPL Auction.dta"
 drop _merge
 save merged_data.dta, replace
 
@@ -387,18 +392,15 @@ zipfile merged_data.dta, saving(merged_data.zip, replace)
 unzipfile merged_data.zip, replace
 use merged_data.dta, clear
 
-drop if missing(grouping)
 
 drop R
 
 destring player_id, replace
 
 order player_id, first
-order grouping, first
+
 
 order name, first
-
-
 
 
 save analysis.dta, replace
@@ -411,59 +413,57 @@ use analysis.dta, clear
 **Post-Merge cleaning
 //type_cat
 
-replace type_cat2021 = type_cat2022 if missing(type_cat2021) & !missing(type_cat2022)
-replace type_cat2021 = type_cat2023 if missing(type_cat2021) & !missing(type_cat2023)
-replace type_cat2021 = type_cat2024 if missing(type_cat2021) & !missing(type_cat2024)
+//replace type_cat2021 = type_cat2022 if missing(type_cat2021) & !missing(type_cat2022)
+//replace type_cat2021 = type_cat2023 if missing(type_cat2021) & !missing(type_cat2023)
+//replace type_cat2021 = type_cat2024 if missing(type_cat2021) & !missing(type_cat2024)
 
-replace type_cat2022 = type_cat2021 if missing(type_cat2022) & !missing(type_cat2021)
-replace type_cat2022 = type_cat2023 if missing(type_cat2022) & !missing(type_cat2023)
-replace type_cat2022 = type_cat2024 if missing(type_cat2022) & !missing(type_cat2024)
+//replace type_cat2022 = type_cat2021 if missing(type_cat2022) & !missing(type_cat2021)
+//replace type_cat2022 = type_cat2023 if missing(type_cat2022) & !missing(type_cat2023)
+//replace type_cat2022 = type_cat2024 if missing(type_cat2022) & !missing(type_cat2024)
 
-replace type_cat2023 = type_cat2021 if missing(type_cat2023) & !missing(type_cat2021)
-replace type_cat2023 = type_cat2022 if missing(type_cat2023) & !missing(type_cat2022)
-replace type_cat2023 = type_cat2024 if missing(type_cat2023) & !missing(type_cat2024)
+//replace type_cat2023 = type_cat2021 if missing(type_cat2023) & !missing(type_cat2021)
+//replace type_cat2023 = type_cat2022 if missing(type_cat2023) & !missing(type_cat2022)
+//replace type_cat2023 = type_cat2024 if missing(type_cat2023) & !missing(type_cat2024)
 
-replace type_cat2024 = type_cat2021 if missing(type_cat2024) & !missing(type_cat2021)
-replace type_cat2024 = type_cat2023 if missing(type_cat2024) & !missing(type_cat2023)
-replace type_cat2024 = type_cat2022 if missing(type_cat2024) & !missing(type_cat2022)
+//replace type_cat2024 = type_cat2021 if missing(type_cat2024) & !missing(type_cat2021)
+//replace type_cat2024 = type_cat2023 if missing(type_cat2024) & !missing(type_cat2023)
+//replace type_cat2024 = type_cat2022 if missing(type_cat2024) & !missing(type_cat2022)
 
 
-generate all_same_value = (type_cat2021 == type_cat2022) & (type_cat2022 == type_cat2023) & (type_cat2023 == type_cat2024)
-tab all_same_value
+//generate all_same_value = (type_cat2021 == type_cat2022) & (type_cat2022 == type_cat2023) & (type_cat2023 == type_cat2024)
+//tab all_same_value
 
-drop type_cat2021 type_cat2022 type_cat2023 all_same_value
-rename type_cat2024 type_cat
+//drop type_cat2021 type_cat2022 type_cat2023 all_same_value
+//rename type_cat2024 type_cat
 
 //nat_cat
 
-replace nat_cat2021 = nat_cat2022 if missing(nat_cat2021) & !missing(nat_cat2022)
-replace nat_cat2021 = nat_cat2023 if missing(nat_cat2021) & !missing(nat_cat2023)
-replace nat_cat2021 = nat_cat2024 if missing(nat_cat2021) & !missing(nat_cat2024)
+*replace nat_cat2021 = nat_cat2022 if missing(nat_cat2021) & !missing(nat_cat2022)
+*replace nat_cat2021 = nat_cat2023 if missing(nat_cat2021) & !missing(nat_cat2023)
+*replace nat_cat2021 = nat_cat2024 if missing(nat_cat2021) & !missing(nat_cat2024)
 
-replace nat_cat2022 = nat_cat2021 if missing(nat_cat2022) & !missing(nat_cat2021)
-replace nat_cat2022 = nat_cat2023 if missing(nat_cat2022) & !missing(nat_cat2023)
-replace nat_cat2022 = nat_cat2024 if missing(nat_cat2022) & !missing(nat_cat2024)
+*replace nat_cat2022 = nat_cat2021 if missing(nat_cat2022) & !missing(nat_cat2021)
+*replace nat_cat2022 = nat_cat2023 if missing(nat_cat2022) & !missing(nat_cat2023)
+*replace nat_cat2022 = nat_cat2024 if missing(nat_cat2022) & !missing(nat_cat2024)
 
-replace nat_cat2023 = nat_cat2021 if missing(nat_cat2023) & !missing(nat_cat2021)
-replace nat_cat2023 = nat_cat2022 if missing(nat_cat2023) & !missing(nat_cat2022)
-replace nat_cat2023 = nat_cat2024 if missing(nat_cat2023) & !missing(nat_cat2024)
+*replace nat_cat2023 = nat_cat2021 if missing(nat_cat2023) & !missing(nat_cat2021)
+*replace nat_cat2023 = nat_cat2022 if missing(nat_cat2023) & !missing(nat_cat2022)
+*replace nat_cat2023 = nat_cat2024 if missing(nat_cat2023) & !missing(nat_cat2024)
 
-replace nat_cat2024 = nat_cat2021 if missing(nat_cat2024) & !missing(nat_cat2021)
-replace nat_cat2024 = nat_cat2023 if missing(nat_cat2024) & !missing(nat_cat2023)
-replace nat_cat2024 = nat_cat2022 if missing(nat_cat2024) & !missing(nat_cat2022)
+*replace nat_cat2024 = nat_cat2021 if missing(nat_cat2024) & !missing(nat_cat2021)
+*replace nat_cat2024 = nat_cat2023 if missing(nat_cat2024) & !missing(nat_cat2023)
+*replace nat_cat2024 = nat_cat2022 if missing(nat_cat2024) & !missing(nat_cat2022)
 
-drop nat_cat2021 nat_cat2022 nat_cat2023 PlayingRole
-rename nat_cat2024 nat_cat
+*drop nat_cat2021 nat_cat2022 nat_cat2023 PlayingRole
+*rename nat_cat2024 nat_cat
 
-drop if missing(name)
-
+tab player_id1 if missing(name)
+replace name = "Mahmudullah" if player_id1 == 56025
+replace name = "Darcy Short" if player_id1 == 308798
 save analysis.dta, replace
 
-encode grouping, gen (grouping_cat)
-drop grouping_num
 
 
-reshape wide grouping span matches runs hs hundreds bat_ave wkts bbi bowl_ave ct st ave_diff, i(player_id1) j(grouping_cat)
+//reshape wide grouping span matches runs hs hundreds bat_ave wkts bbi bowl_ave ct st ave_diff, i(player_id1) j(grouping_cat)
 
-save analysis.dta, replace
 
