@@ -457,13 +457,104 @@ use analysis.dta, clear
 *drop nat_cat2021 nat_cat2022 nat_cat2023 PlayingRole
 *rename nat_cat2024 nat_cat
 
+cd ..
+
 tab player_id1 if missing(name)
 replace name = "Mahmudullah" if player_id1 == 56025
 replace name = "Darcy Short" if player_id1 == 308798
+
+rename player_id1 player_id
+sort player_id auction_year
 save analysis.dta, replace
 
 
 
 //reshape wide grouping span matches runs hs hundreds bat_ave wkts bbi bowl_ave ct st ave_diff, i(player_id1) j(grouping_cat)
+
+
+* Creating necessary variables for analysis
+order auction_year, after(player_id)
+
+* Matches
+generate matches = matches9 if auction_year == 2021
+local year 2022
+forvalues i = 10/12 {
+    replace matches = matches`i' if auction_year == `year'
+    local ++year
+}
+order matches, after(auction_year)
+
+* Runs
+generate runs = runs9 if auction_year == 2021
+local year 2022
+forvalues i = 10/12 {
+    replace runs = runs`i' if auction_year == `year'
+    local ++year
+}
+order runs, after(matches)
+
+* Batting average
+generate bat_avg = bat_ave9 if auction_year == 2021
+local year 2022
+forvalues i = 10/12 {
+    replace bat_avg = bat_ave`i' if auction_year == `year'
+    local ++year
+}
+order bat_avg, after(runs)
+
+
+* Wickets
+generate wickets = wkts9 if auction_year == 2021
+local year 2022
+forvalues i = 10/12 {
+    replace wickets = wkts`i' if auction_year == `year'
+    local ++year
+}
+order wickets, after(bat_avg)
+
+* Bowling average
+generate bowl_avg = bowl_ave9 if auction_year == 2021
+local year 2022
+forvalues i = 10/12 {
+    replace bowl_avg = bowl_ave`i' if auction_year == `year'
+    local ++year
+}
+order bowl_avg, after(wickets)
+
+
+* Reorder variables for easy browsing
+order(age saleprice sold base_price ig_followers rhb bowl_style_cat type_cat log_saleprice nat_cat team_cat log_ig_followers), after(bowl_avg)
+
+xtset player_id auction_year
+save analysis.dta, replace
+
+* Simple logit of sold
+logit sold c.matches c.runs c.bat_avg c.wickets c.bowl_avg
+margins, dydx(*)
+
+* Logit of sold with more covariates
+logit sold c.matches c.runs c.bat_avg c.wickets c.bowl_avg i.type_cat i.nat_cat
+margins, dydx(*) post
+
+test 2.type_cat == 3.type_cat
+test 2.type_cat == 4.type_cat
+test 3.type_cat == 4.type_cat
+
+
+* Simple regression of log_saleprice
+reg log_saleprice c.matches c.runs c.bat_avg c.wickets c.bowl_avg
+
+* Regression fo log_saleprice with more covariates
+reg log_saleprice c.matches c.runs c.bat_avg c.wickets c.bowl_avg i.type_cat i.nat_cat
+margins nat_cat
+
+
+* Panel regression (RE)
+xtreg log_saleprice c.matches c.runs c.bat_avg c.wickets c.bowl_avg i.type_cat i.nat_cat, re
+
+
+
+
+
 
 
