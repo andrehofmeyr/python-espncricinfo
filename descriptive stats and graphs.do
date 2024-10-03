@@ -20,7 +20,6 @@ use analysis.dta, clear
 *Sale price summary
 summarize saleprice if sold==1, detail
 
-
 summarize saleprice if sold==1 & auction_year==2021, detail
 summarize saleprice if sold==1 & auction_year==2022, detail
 summarize saleprice if sold==1 & auction_year==2023, detail
@@ -243,9 +242,10 @@ twoway (line mean_price_year auction_year if sold==1), saving(saleprice_trend, r
 
 twoway kdensity saleprice
 
-twoway lfit saleprice bat_ave if sold==1
+twoway lfit saleprice bat_avg if sold==1
+twoway lfit saleprice wickets if sold==1
 
-twoway (scatter saleprice bat_ave) (lfit saleprice bat_ave) if sold==1
+twoway (scatter saleprice bat_avg) (lfit saleprice bat_avg) if sold==1
 
 graph hbar saleprice if sold==1, over(team_cat, label(nolabels)) blabel(group, position(base))
 

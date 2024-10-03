@@ -1,6 +1,7 @@
 //RESTRUCTURED TO ALLOW FOR RESHAPING
 
 **PART 1
+
 clear all 
 
 cap log close
@@ -240,12 +241,14 @@ drop type
 //saleprice
 replace saleprice = "0" if saleprice == "None"
 destring saleprice, replace
-gen log_saleprice = log(saleprice+1)
+gen log_saleprice = log(saleprice)
 *histogram log_saleprice, normal
 
 *how useful is this?
 
 //nationality
+replace nationality = "Other" if nationality == "Bangladesh" | nationality == "Ireland" | nationality == "Namibia" | nationality == "Nepal" | nationality == "Netherlands" | nationality == "Scotland" | nationality == "USA" | nationality == "Zimbabwe"  
+
 encode nationality, gen(nat_cat)
 
 drop nationality
@@ -348,8 +351,8 @@ replace name = "Obed McCoy" if name == "Obed Mccoy"
 replace name = "Mujeeb Rahman" if name == "Mujeeb Zadran"
 
 replace nat_cat = 2 if name == "Chris Lynn"
-replace nat_cat = 13 if name == "Isuru Udana"
-replace nat_cat = 13 if name == "Maheesh Theekshana"
+replace nat_cat = 8 if name == "Isuru Udana"
+replace nat_cat = 8 if name == "Maheesh Theekshana"
 replace nat_cat = 1 if name == "Mujeeb Rahman"
 
 
@@ -410,52 +413,7 @@ unzipfile analysis.zip, replace
 
 use analysis.dta, clear
 
-**Post-Merge cleaning
-//type_cat
-
-//replace type_cat2021 = type_cat2022 if missing(type_cat2021) & !missing(type_cat2022)
-//replace type_cat2021 = type_cat2023 if missing(type_cat2021) & !missing(type_cat2023)
-//replace type_cat2021 = type_cat2024 if missing(type_cat2021) & !missing(type_cat2024)
-
-//replace type_cat2022 = type_cat2021 if missing(type_cat2022) & !missing(type_cat2021)
-//replace type_cat2022 = type_cat2023 if missing(type_cat2022) & !missing(type_cat2023)
-//replace type_cat2022 = type_cat2024 if missing(type_cat2022) & !missing(type_cat2024)
-
-//replace type_cat2023 = type_cat2021 if missing(type_cat2023) & !missing(type_cat2021)
-//replace type_cat2023 = type_cat2022 if missing(type_cat2023) & !missing(type_cat2022)
-//replace type_cat2023 = type_cat2024 if missing(type_cat2023) & !missing(type_cat2024)
-
-//replace type_cat2024 = type_cat2021 if missing(type_cat2024) & !missing(type_cat2021)
-//replace type_cat2024 = type_cat2023 if missing(type_cat2024) & !missing(type_cat2023)
-//replace type_cat2024 = type_cat2022 if missing(type_cat2024) & !missing(type_cat2022)
-
-
-//generate all_same_value = (type_cat2021 == type_cat2022) & (type_cat2022 == type_cat2023) & (type_cat2023 == type_cat2024)
-//tab all_same_value
-
-//drop type_cat2021 type_cat2022 type_cat2023 all_same_value
-//rename type_cat2024 type_cat
-
-//nat_cat
-
-*replace nat_cat2021 = nat_cat2022 if missing(nat_cat2021) & !missing(nat_cat2022)
-*replace nat_cat2021 = nat_cat2023 if missing(nat_cat2021) & !missing(nat_cat2023)
-*replace nat_cat2021 = nat_cat2024 if missing(nat_cat2021) & !missing(nat_cat2024)
-
-*replace nat_cat2022 = nat_cat2021 if missing(nat_cat2022) & !missing(nat_cat2021)
-*replace nat_cat2022 = nat_cat2023 if missing(nat_cat2022) & !missing(nat_cat2023)
-*replace nat_cat2022 = nat_cat2024 if missing(nat_cat2022) & !missing(nat_cat2024)
-
-*replace nat_cat2023 = nat_cat2021 if missing(nat_cat2023) & !missing(nat_cat2021)
-*replace nat_cat2023 = nat_cat2022 if missing(nat_cat2023) & !missing(nat_cat2022)
-*replace nat_cat2023 = nat_cat2024 if missing(nat_cat2023) & !missing(nat_cat2024)
-
-*replace nat_cat2024 = nat_cat2021 if missing(nat_cat2024) & !missing(nat_cat2021)
-*replace nat_cat2024 = nat_cat2023 if missing(nat_cat2024) & !missing(nat_cat2023)
-*replace nat_cat2024 = nat_cat2022 if missing(nat_cat2024) & !missing(nat_cat2022)
-
-*drop nat_cat2021 nat_cat2022 nat_cat2023 PlayingRole
-*rename nat_cat2024 nat_cat
+drop PlayingRole
 
 cd ..
 
@@ -527,30 +485,6 @@ order(age saleprice sold base_price ig_followers rhb bowl_style_cat type_cat log
 
 xtset player_id auction_year
 save analysis.dta, replace
-
-* Simple logit of sold
-logit sold c.matches c.runs c.bat_avg c.wickets c.bowl_avg
-margins, dydx(*)
-
-* Logit of sold with more covariates
-logit sold c.matches c.runs c.bat_avg c.wickets c.bowl_avg i.type_cat i.nat_cat
-margins, dydx(*) post
-
-test 2.type_cat == 3.type_cat
-test 2.type_cat == 4.type_cat
-test 3.type_cat == 4.type_cat
-
-
-* Simple regression of log_saleprice
-reg log_saleprice c.matches c.runs c.bat_avg c.wickets c.bowl_avg
-
-* Regression fo log_saleprice with more covariates
-reg log_saleprice c.matches c.runs c.bat_avg c.wickets c.bowl_avg i.type_cat i.nat_cat
-margins nat_cat
-
-
-* Panel regression (RE)
-xtreg log_saleprice c.matches c.runs c.bat_avg c.wickets c.bowl_avg i.type_cat i.nat_cat, re
 
 
 
